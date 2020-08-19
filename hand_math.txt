@@ -1,0 +1,21 @@
+number of junk hands: 6P5 -> 720
+number of pair hands: 6C1 * 5P3 -> 6 * (5!/(5-3)!) -> 6 * 60 -> 360
+number of two-pair hands: 6C2 * 5 -> 15 * 5 -> 75
+number of three-of-a-kind hands: 6C1 * 5P2 -> 6 * (5!/(5-2)!) -> 6 * 5 * 4 -> 120
+number of full houses: 6C2 -> 6!/((6-2)!(2!)) -> 15
+number of four-of-a-kind hands: 6C1 * 5C1 -> 6 * 5 -> 30
+number of five-of-a-kind hands: 6C1 -> 6
+
+total possible hands: 1326
+
+probabilities of getting a given type of hand off first draw assuming equal probability of drawing each card:
+(in other words, if you made a gigantic list of every possible hand and randomly selected a hand from the list,
+here's the chance you have of getting each type of hand)
+probability of getting a junk hand: 720/1326 -> 0.542577242
+probability of getting one pair: 360/1326 -> 0.271493213
+probability of getting two pair: 75/1326 -> 0.056561086
+probability of getting three-of-a-kind: 120/1326 -> 0.090497738
+probability of getting full house: 15/1326 -> 0.011312217
+probability of getting four-of-a-kind: 30/1326 -> 0.022624434
+probability of getting five-of-a-kind: 6/1326 -> 0.004524887
+
