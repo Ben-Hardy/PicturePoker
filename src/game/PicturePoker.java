@@ -1,5 +1,10 @@
 package game;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -28,10 +33,18 @@ public class PicturePoker {
 	
 	private int coins;
 	
-	private Deck dealerDeck;
-	
 	public PicturePoker() {
-		coins = 5;
+		File saveFile = new File("save.txt");
+		try {
+			if (saveFile.createNewFile()) {
+				coins = 5;
+				save();
+			} else {
+				load();		
+			}
+		} catch (IOException e) {
+			
+		}
 	}
 	
 	/**
@@ -99,6 +112,12 @@ public class PicturePoker {
 			
 			if (input[0].contentEquals("quit")) {
 				quit = true;
+				if (coins > 0) {
+					save();
+				} else { // if you lose, you don't want the game stuck in a lost state, so reset coins to 5
+					coins = 5;
+					save();
+				}
 			}  else if (input[0].contentEquals("hold")) {
 				printWinner();
 				processBet(ante);
@@ -158,12 +177,42 @@ public class PicturePoker {
 				} else if (input[0].contentEquals("")) {
 				System.out.println("Oops! Invalid command!");
 				printHelp();
+			} else if (input[0].contentEquals("save")) {
+				save();
+			} else if (input[0].contentEquals("load")) {
+				load();
 			} else {
-
+				
 			}
 		}
 		
 		in.close();
+	}
+	
+	private void load() {
+		try {
+			File save = new File("save.txt");
+			BufferedReader br = new BufferedReader(new FileReader(save));
+			coins = Integer.parseInt(br.readLine());
+			br.close();
+		} catch (IOException e) {
+			System.out.println("Something went wrong loading.");
+		} finally {
+			System.out.println("\nLoaded successfully!");
+		}
+	}
+	
+	private void save() {
+		try {
+			File save = new File("save.txt");
+			FileWriter fw = new FileWriter(save);
+			fw.write("" + coins);
+			fw.close();
+		} catch (IOException e) {
+			System.out.println("Something went wrong saving.");
+		} finally {
+			System.out.println("\nSaved successfully!");
+		}
 	}
 	
 	private void printWinner() {
