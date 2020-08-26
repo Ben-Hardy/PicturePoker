@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
 /**
  * A command line attempt at Picture Poker found in the various Mario games for the Nintendo DS
  * 
@@ -31,20 +30,8 @@ public class PicturePoker {
 	private Hand dealerHand;
 	private Hand playerHand;
 	
-	private int coins;
-	
 	public PicturePoker() {
-		File saveFile = new File("save.txt");
-		try {
-			if (saveFile.createNewFile()) {
-				coins = 5;
-				save();
-			} else {
-				load();		
-			}
-		} catch (IOException e) {
-			
-		}
+
 	}
 	
 	/**
@@ -82,12 +69,16 @@ public class PicturePoker {
 		playerHand.swapCards(toSwap);
 	}
 	
+	/**
+	 * Runs a command line instance of PicturePoker
+	 */
 	public void play() {
 		Boolean quit = false;
 		Boolean isNewHand = true;
 		Boolean badInput = false;
 		Scanner in = new Scanner(System.in);
 		int ante = 1;
+		int coins = initialLoad();
 		
 		System.out.println("Welcome to Picture Poker!");
 		printHelp();
@@ -96,10 +87,12 @@ public class PicturePoker {
 		while (!quit) {
 			
 			if (isNewHand) {
+				save(coins);
 				dealerHand = new Hand();
 				playerHand = new Hand();				
 				isNewHand = false;
 				ante = 1;
+				System.out.println("\nLuigi deals a new Hand!");
 			}
 			
 			badInput = false;
@@ -113,32 +106,31 @@ public class PicturePoker {
 			if (input[0].contentEquals("quit")) {
 				quit = true;
 				if (coins > 0) {
-					save();
+					save(coins);
 				} else { // if you lose, you don't want the game stuck in a lost state, so reset coins to 5
 					coins = 5;
-					save();
+					save(coins);
 				}
 			}  else if (input[0].contentEquals("hold")) {
 				printWinner();
-				processBet(ante);
+				coins = processBet(ante, coins);
 				isNewHand = true;
-			} else if (input[0].contentEquals("draw")) {
+			} else if (input[0].contentEquals("swap")) {
 				ArrayList<Integer> toSwap = new ArrayList<Integer>();
 				
 				for (int i = 1; i < input.length; i++) {
-					System.out.println(input[i]);
 					try {
 						int idx = Integer.parseInt(input[i]);
 						
 						if (idx < 1 || idx > 5) {
-							System.out.println("the input numbers for the draw command must be between 1 and 5 inclusive");
+							System.out.println("the input numbers for the swap command must be between 1 and 5 inclusive");
 							badInput = true;
 							break;
 						} else {
 							toSwap.add(idx - 1);
 						}
 					} catch (Exception e) {
-						System.out.println("One or more numbers for your draw command were not of the right format");
+						System.out.println("One or more numbers for your swap command were not of the right format");
 						badInput = true;
 					}
 				}
@@ -147,7 +139,7 @@ public class PicturePoker {
 					playerHand.swapCards(toSwap);
 					
 					printWinner();
-					processBet(ante);
+					coins = processBet(ante, coins);
 					isNewHand = true;
 				}
 			}
@@ -178,7 +170,7 @@ public class PicturePoker {
 				System.out.println("Oops! Invalid command!");
 				printHelp();
 			} else if (input[0].contentEquals("save")) {
-				save();
+				save(coins);
 			} else if (input[0].contentEquals("load")) {
 				load();
 			} else {
@@ -189,7 +181,33 @@ public class PicturePoker {
 		in.close();
 	}
 	
-	private void load() {
+	/**
+	 * First load of the game when PicturePoker is initially run. If a save file doesn't exist,
+	 * it is automatically created, otherwise the number of coins is loaded
+	 * @return coins, the number of coins the player has
+	 */
+	private int initialLoad() {
+		File saveFile = new File("save.txt");
+		
+		int coins = 5;
+		try {
+			if (saveFile.createNewFile()) {
+				save(coins);
+			} else {
+				coins = load();		
+			}
+		} catch (IOException e) {
+			
+		}
+		return coins;
+	}
+	
+	/**
+	 * Loads save.txt, the save file for PicturePoker. save.txt is created in initialLoad
+	 * if it doesn't exist, so this function will not fail to load.
+	 */
+	private int load() {
+		int coins = 0;
 		try {
 			File save = new File("save.txt");
 			BufferedReader br = new BufferedReader(new FileReader(save));
@@ -197,12 +215,16 @@ public class PicturePoker {
 			br.close();
 		} catch (IOException e) {
 			System.out.println("Something went wrong loading.");
-		} finally {
-			System.out.println("\nLoaded successfully!");
 		}
+		
+		return coins;
 	}
 	
-	private void save() {
+	/**
+	 * Saves the current number of coins to a file called save.txt, PicturePoker's
+	 * save file.
+	 */
+	private void save(int coins) {
 		try {
 			File save = new File("save.txt");
 			FileWriter fw = new FileWriter(save);
@@ -210,11 +232,14 @@ public class PicturePoker {
 			fw.close();
 		} catch (IOException e) {
 			System.out.println("Something went wrong saving.");
-		} finally {
-			System.out.println("\nSaved successfully!");
 		}
 	}
 	
+	/**
+	 * Assesses and then prints who won the game, either the Dealer
+	 * or the Player. Also handles ties for when both players end 
+	 * up with the same hand.
+	 */
 	private void printWinner() {
 		int winner = assessWinner();
 		
@@ -230,7 +255,12 @@ public class PicturePoker {
 		}
 	}
 	
-	private void processBet(int ante) {
+	/**
+	 * Handles adding or removing the player's coins based on if
+	 * they won the game or not.
+	 * @param ante the bet used by the player
+	 */
+	private int processBet(int ante, int coins) {
 		int winner = assessWinner();
 		
 		if (winner == 1) {
@@ -251,12 +281,16 @@ public class PicturePoker {
 		} else if (winner == -1) {
 			coins -= ante;
 		}
+		return coins;
 	}
 	
+	/**
+	 * Prints instructions for the various commands
+	 */
 	public void printHelp() {
 		System.out.println("Picture Poker Rules:");
 		System.out.println("\nThere are 4 possible commands:");
-		System.out.println("    draw [1 2 3 4 5]  <- Draws new cards at up to 5 positions");
+		System.out.println("    swap [1 2 3 4 5]  <- Swaps cards at up to 5 positions");
 		System.out.println("    hold  <- Hold with your current hand. Ends round");
 		System.out.println("    ante x   <- Ups your current bet by x. The  maximum bet is 5 so x must be less than or equal to 5 - current bet");
 		System.out.println("    quit  <- quits the game");

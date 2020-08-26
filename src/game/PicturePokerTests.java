@@ -498,7 +498,6 @@ class PicturePokerTests {
 		pp.setHands(hand1, hand1);
 		assertEquals(0, pp.assessWinner());
 		
-		pp.play();
 		
 	}
 	
